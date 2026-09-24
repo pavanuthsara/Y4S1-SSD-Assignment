@@ -10,7 +10,7 @@ import {
   addRefundMessage,
   uploadRefundEvidence
 } from '../controllers/order.controller.js';
-import { protect, admin } from '../middleware/auth.middleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 
 const router = express.Router();

@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import {createReview, getBuyerReviews, updateReview, deleteReview} from '../controllers/reviews.controller.js'; // Adjust the path as necessary
-import { protect } from '../middleware/auth.middleware.js'; // Adjust the path as necessary
+import { protect } from '../middleware/authMiddleware.js'; // Adjust the path as necessary
 import multer from 'multer';
 
 const storage = multer.memoryStorage();
