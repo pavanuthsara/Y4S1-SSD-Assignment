@@ -41,6 +41,15 @@ const buyerSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false
+    },
+    // Hashed password reset token and its expiry
+    resetPasswordToken: {
+      type: String,
+      default: null
+    },
+    resetPasswordExpire: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true } // Adds createdAt and updatedAt

@@ -1,6 +1,7 @@
 import Buyer from '../models/buyer.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { generateToken } from '../utils/generateToken.js';
 import transporter from '../config/email.js';
 
@@ -131,34 +132,40 @@ const updateUserProfile = async (req, res, next) => {
 };
 
 // PASSWORD RESET EMAIL
+const PASSWORD_RESET_TOKEN_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+
 const resetPasswordRequest = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await Buyer.findOne({ email });
 
+    // Always return the same response whether or not the account exists.
     if (!user) {
-      res.statusCode = 404;
-      throw new Error('User not found!');
+      return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '15m'
-    });
+    // Generate a single-use random token (never signed with the session JWT secret).
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    const passwordResetLink = `https://mern-shop-abxs.onrender.com/reset-password/${user._id}/${token}`;
-    console.log(passwordResetLink); // dev only
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpire = new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MS);
+    await user.save();
+
+    const frontendUrl = (process.env.PASSWORD_RESET_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+    const passwordResetLink = `${frontendUrl}/reset-password/${user._id}/${resetToken}`;
 
     await transporter.sendMail({
-      from: `"MERN Shop" ${process.env.EMAIL_FROM}`,
+      from: `Freshly <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: 'Password Reset',
       html: `<p>Hi ${user.name},</p>
         <p>Click below to reset your password:</p>
         <p><a href="${passwordResetLink}" target="_blank">${passwordResetLink}</a></p>
-        <p>If you didn't request this, ignore this email.</p>`
+        <p>If you didn't request this, ignore this email. The link expires in 15 minutes.</p>`
     });
 
-    res.status(200).json({ message: 'Password reset email sent. Please check your email.' });
+    res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
   } catch (error) {
     next(error);
   }
@@ -171,15 +178,35 @@ const resetPassword = async (req, res, next) => {
     const { id: userId, token } = req.params;
     const user = await Buyer.findById(userId);
 
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decodedToken || decodedToken.userId !== userId) {
+    if (!user || !user.resetPasswordToken || !user.resetPasswordExpire) {
       res.statusCode = 401;
-      throw new Error('Invalid or expired token');
+      throw new Error('Invalid or expired reset token');
+    }
+
+    if (user.resetPasswordExpire.getTime() < Date.now()) {
+      user.resetPasswordToken = null;
+      user.resetPasswordExpire = null;
+      await user.save();
+      res.statusCode = 401;
+      throw new Error('Reset link has expired. Please request a new one.');
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const storedBuffer = Buffer.from(user.resetPasswordToken, 'hex');
+    const providedBuffer = Buffer.from(hashedToken, 'hex');
+    const isTokenValid =
+      storedBuffer.length === providedBuffer.length &&
+      crypto.timingSafeEqual(storedBuffer, providedBuffer);
+
+    if (!isTokenValid) {
+      res.statusCode = 401;
+      throw new Error('Invalid or expired reset token');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpire = null;
     await user.save();
 
     res.status(200).json({ message: 'Password successfully reset' });
