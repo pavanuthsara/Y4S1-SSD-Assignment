@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download, File } from 'lucide-react';
@@ -98,95 +98,43 @@ const ProductReportGenerator = () => {
           ['Product Summary'],
           ['This report provides an overview of your product inventory with Freshly.lk.'],
         ];
-        const coverSheet = XLSX.utils.aoa_to_sheet(coverSheetData);
 
-        coverSheet['!cols'] = [{ wch: 20 }, { wch: 50 }];
-        coverSheet['A1'] = {
-          v: 'Freshly.lk',
-          s: {
-            font: { name: 'Helvetica', bold: true, sz: 16 },
-            alignment: { horizontal: 'left', vertical: 'center' },
-          },
-        };
-        coverSheet['A2'] = {
-          v: 'Delivering Freshness Across Sri Lanka',
-          s: { font: { name: 'Helvetica', sz: 12 } },
-        };
-        coverSheet['A3'] = {
-          v: '123 Green Harvest Road, Colombo 00700, Sri Lanka',
-          s: { font: { name: 'Helvetica', sz: 10 } },
-        };
-        coverSheet['A4'] = {
-          v: 'Email: support@freshly.lk',
-          s: { font: { name: 'Helvetica', sz: 10 } },
-        };
-        coverSheet['A5'] = {
-          v: 'Phone: +94 112345678',
-          s: { font: { name: 'Helvetica', sz: 10 } },
-        };
-        coverSheet['A6'] = {
-          v: 'Website: www.freshly.lk',
-          s: { font: { name: 'Helvetica', sz: 10 } },
-        };
-        coverSheet['A8'] = {
-          v: 'Product Report',
-          s: {
-            font: { name: 'Helvetica', bold: true, sz: 14 },
-            alignment: { horizontal: 'left', vertical: 'center' },
-          },
-        };
-        coverSheet['A9'] = {
-          v: 'Prepared for:',
-          s: { font: { name: 'Helvetica', bold: true } },
-        };
-        coverSheet['A10'] = {
-          v: 'Date:',
-          s: { font: { name: 'Helvetica', bold: true } },
-        };
-        coverSheet['A11'] = {
-          v: 'Report ID:',
-          s: { font: { name: 'Helvetica', bold: true } },
-        };
-        coverSheet['A12'] = {
-          v: 'Confidential: For internal use only.',
-          s: { font: { name: 'Helvetica', italic: true } },
-        };
-        coverSheet['A14'] = {
-          v: 'Product Summary',
-          s: { font: { name: 'Helvetica', bold: true, sz: 12 } },
-        };
+        const workbook = new ExcelJS.Workbook();
+        const coverSheet = workbook.addWorksheet('Cover');
+        coverSheetData.forEach((row) => coverSheet.addRow(row));
+        coverSheet.getColumn(1).width = 20;
+        coverSheet.getColumn(2).width = 50;
 
-        const worksheet = XLSX.utils.json_to_sheet(reportData, {
-          header: columns,
-        });
-
-        worksheet['!cols'] = [
-          { wch: 20 },
-          { wch: 15 },
-          { wch: 15 },
-          { wch: 10 },
-          { wch: 15 },
-          { wch: 30 },
+        const worksheet = workbook.addWorksheet('Products');
+        worksheet.columns = [
+          { header: 'Name', key: 'Name', width: 20 },
+          { header: 'Category', key: 'Category', width: 15 },
+          { header: 'Price', key: 'Price', width: 15 },
+          { header: 'Stock (kg)', key: 'Stock', width: 10 },
+          { header: 'Certification', key: 'Certification', width: 15 },
+          { header: 'Description', key: 'Description', width: 30 },
         ];
-        columns.forEach((col, index) => {
-          const cell = XLSX.utils.encode_cell({ r: 0, c: index });
-          worksheet[cell] = {
-            v: col,
-            s: {
-              font: { name: 'Helvetica', bold: true },
-              alignment: { horizontal: 'center', vertical: 'center' },
-            },
-          };
+        reportData.forEach((item) => {
+          worksheet.addRow(item);
         });
 
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, coverSheet, 'Cover');
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { name: 'Helvetica', bold: true };
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        XLSX.writeFile(
-          workbook,
-          `Freshly_Product_Report_${new Date().toISOString().split('T')[0]}.xlsx`
-        );
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Freshly_Product_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
         toast.success(`Excel report generated successfully!`, {
           style: {
             background: '#34D399',
