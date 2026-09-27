@@ -46,6 +46,15 @@ const protect = async (req, res, next) => {
       res.statusCode = 401;
       throw new Error('Authentication failed: User not found.');
     }
+
+    // Check if password was changed after the token was issued
+    if (req.user.passwordChangedAt) {
+      const changedTimestamp = parseInt(req.user.passwordChangedAt.getTime() / 1000, 10);
+      if (decodedToken.iat < changedTimestamp) {
+        res.statusCode = 401;
+        throw new Error('Authentication failed: Password recently changed. Please log in again.');
+      }
+    }
     
     next();
   } catch (error) {
