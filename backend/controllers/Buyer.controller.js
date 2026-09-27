@@ -116,6 +116,7 @@ const updateUserProfile = async (req, res, next) => {
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
+      user.passwordChangedAt = Date.now() - 1000;
     }
 
     const updatedUser = await user.save();
@@ -207,9 +208,11 @@ const resetPassword = async (req, res, next) => {
     user.password = hashedPassword;
     user.resetPasswordToken = null;
     user.resetPasswordExpire = null;
+    user.passwordChangedAt = Date.now() - 1000;
     await user.save();
 
-    res.status(200).json({ message: 'Password successfully reset' });
+    res.clearCookie('jwt', { httpOnly: true });
+    res.status(200).json({ message: 'Password successfully reset. Please log in with your new password.' });
   } catch (error) {
     next(error);
   }

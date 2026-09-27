@@ -50,6 +50,10 @@ const buyerSchema = new mongoose.Schema(
     resetPasswordExpire: {
       type: Date,
       default: null
+    },
+    // Timestamp for when the password was last changed
+    passwordChangedAt: {
+      type: Date
     }
   },
   { timestamps: true } // Adds createdAt and updatedAt
