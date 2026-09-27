@@ -5,6 +5,11 @@ import mongoose from 'mongoose';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
+// Reject objects/arrays so values like { "$ne": null } can't reach a Mongo query
+const isNonEmptyString = (value) => typeof value === 'string' && value.trim() !== '';
+
+const hashResetToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
 // @desc     Register a farmer
 // @method   POST
 // @endpoint /api/farmers/register
@@ -14,13 +19,18 @@ const registerFarmer = async (req, res, next) => {
     const { name, email, password, phone, nic, farmAddress } = req.body;
 
     // Check if the password is provided
-    if (!password) {
+    if (!isNonEmptyString(password)) {
       res.statusCode = 400;
       throw new Error('Password is required.');
     }
 
+    if (!isNonEmptyString(email)) {
+      res.statusCode = 400;
+      throw new Error('A valid email is required.');
+    }
+
     // Check if farmer already exists
-    const farmerExists = await Farmer.findOne({ email });
+    const farmerExists = await Farmer.findOne({ email: { $eq: email } });
     if (farmerExists) {
       res.statusCode = 409;
       throw new Error('Farmer already exists. Please choose a different email.');
@@ -78,8 +88,13 @@ const loginFarmer = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+      res.statusCode = 400;
+      throw new Error('Invalid email or password.');
+    }
+
     // Find the farmer
-    const farmer = await Farmer.findOne({ email });
+    const farmer = await Farmer.findOne({ email: { $eq: email } });
     if (!farmer) {
       res.statusCode = 404;
       throw new Error('Invalid email or password.');
@@ -128,15 +143,20 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const farmer = await Farmer.findOne({ email });
+    if (!isNonEmptyString(email)) {
+      res.statusCode = 400;
+      throw new Error('A valid email is required.');
+    }
+
+    const farmer = await Farmer.findOne({ email: { $eq: email } });
     if (!farmer) {
       res.statusCode = 404;
       throw new Error('No account found with that email.');
     }
 
-    // Generate reset token
+    // Generate reset token (stored as a SHA-256 hash so it can be looked up directly)
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = await bcrypt.hash(resetToken, 10);
+    const resetTokenHash = hashResetToken(resetToken);
     
     // Set token and expiry on farmer document
     farmer.resetPasswordToken = resetTokenHash;
@@ -187,21 +207,20 @@ const resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
 
+    if (!isNonEmptyString(token) || !isNonEmptyString(password)) {
+      res.statusCode = 400;
+      throw new Error('Invalid or expired reset token');
+    }
+
     // Find farmer with matching reset token and valid expiry
     const farmer = await Farmer.findOne({
+      resetPasswordToken: { $eq: hashResetToken(token) },
       resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!farmer) {
       res.statusCode = 400;
       throw new Error('Invalid or expired reset token');
-    }
-
-    // Verify token
-    const isTokenValid = await bcrypt.compare(token, farmer.resetPasswordToken);
-    if (!isTokenValid) {
-      res.statusCode = 400;
-      throw new Error('Invalid reset token');
     }
 
     // Hash new password
