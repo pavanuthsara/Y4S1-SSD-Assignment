@@ -1,6 +1,14 @@
 import Product from '../../models/productListingModels/product.model.js';
 import { deleteFile } from '../../utils/productListingUtils/file.js';
 
+const MAX_SEARCH_LENGTH = 100;
+
+// Only accept a string search term and escape regex metacharacters so it matches literally
+const toSafeSearchRegex = (value) => {
+  if (typeof value !== 'string') return '';
+  return value.slice(0, MAX_SEARCH_LENGTH).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 const getProducts = async (req, res, next) => {
   try {
     const total = await Product.countDocuments();
@@ -8,7 +16,7 @@ const getProducts = async (req, res, next) => {
     const maxSkip = total === 0 ? 0 : total - 1;
     const limit = Number(req.query.limit) || maxLimit;
     const skip = Number(req.query.skip) || 0;
-    const search = req.query.search || '';
+    const search = toSafeSearchRegex(req.query.search);
 
     const products = await Product.find({
       name: { $regex: search, $options: 'i' }
@@ -162,8 +170,9 @@ const getFarmerProducts = async (req, res, next) => {
       'farmer.id': farmerId
     };
 
-    if (req.query.search) {
-      query.name = { $regex: req.query.search, $options: 'i' };
+    const search = toSafeSearchRegex(req.query.search);
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
     }
 
     const total = await Product.countDocuments(query);
