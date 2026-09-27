@@ -141,7 +141,7 @@ const resetPasswordRequest = async (req, res, next) => {
 
     // Always return the same response whether or not the account exists.
     if (!user) {
-      return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+      return res.status(200).json({ message: 'If an account exists for this email, we\'ve sent you a password reset link. Please check your inbox.' });
     }
 
     // Generate a single-use random token (never signed with the session JWT secret).
@@ -165,7 +165,7 @@ const resetPasswordRequest = async (req, res, next) => {
         <p>If you didn't request this, ignore this email. The link expires in 15 minutes.</p>`
     });
 
-    res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    res.status(200).json({ message: 'If an account exists for this email, we\'ve sent you a password reset link. Please check your inbox.' });
   } catch (error) {
     next(error);
   }
