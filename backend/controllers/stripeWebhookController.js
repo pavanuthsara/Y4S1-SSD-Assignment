@@ -56,6 +56,12 @@ export const stripeWebhook = async (req, res) => {
 
       console.log(`Found order ${orderId}, current paid status:`, order.isPaid);
 
+
+      if (session.payment_status !== 'paid') {
+        console.warn(`⚠️ Session ${session.id} not paid (${session.payment_status}); ignoring.`);
+        return res.status(200).json({ received: true });
+      }
+
       // Avoid duplicate payment updates
       if (!order.isPaid) {
         // Update order payment info

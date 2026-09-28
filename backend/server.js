@@ -131,7 +131,12 @@ app.get('/api/auth/verify', (req, res) => {
 });
 
 // Serve uploads - include refund evidence
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '/uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
+
 
 // Health check
 app.get('/', (req, res) => {

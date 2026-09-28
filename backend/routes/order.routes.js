@@ -6,7 +6,6 @@ import {
   addOrderItems,
   getMyOrders,
   getOrderById,
-  updateOrderToPaid,
   updateOrderToDeliver,
   getOrders,
   updateOrderStatus,
@@ -55,13 +54,6 @@ const upload = multer({
 // ✅ Cleaned up validators with clearer string checks
 const validator = {
   getOrderById: [
-    param('id')
-      .notEmpty()
-      .withMessage('Id is required')
-      .isMongoId()
-      .withMessage('Invalid Id Format')
-  ],
-  updateOrderToPaid: [
     param('id')
       .notEmpty()
       .withMessage('Id is required')
@@ -228,7 +220,6 @@ router.post(
 
 // Generic order routes with params - must come after specific routes
 router.get('/:id', validator.getOrderById, validateRequest, protect, getOrderById);
-router.put('/:id/pay', validator.updateOrderToPaid, validateRequest, protect, updateOrderToPaid);
 router.put('/:id/deliver', validator.updateOrderToDeliver, validateRequest, protect, admin, updateOrderToDeliver);
 router.put('/:id/status', validator.updateOrderStatus, validateRequest, protect, admin, updateOrderStatus);
 router.post(

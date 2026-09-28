@@ -162,51 +162,6 @@ const getOrderById = async (req, res, next) => {
   }
 };
 
-// @desc     Update order to paid
-// @route    PUT /api/v1/orders/:id/pay
-// @access   Private
-const updateOrderToPaid = async (req, res, next) => {
-  try {
-    const { id: orderId } = req.params;
-    
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      res.statusCode = 400;
-      throw new Error('Invalid order ID format');
-    }
-    
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-      res.statusCode = 404;
-      throw new Error('Order not found!');
-    }
-    
-    if (order.isPaid) {
-      res.statusCode = 400;
-      throw new Error('Order is already paid');
-    }
-
-    order.isPaid = true;
-    order.paidAt = new Date();
-    order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.updateTime,
-      email_address: req.body.email
-    };
-    
-    // Update status to Processing once paid
-    if (order.status === 'Pending') {
-      order.status = 'Processing';
-    }
-
-    const updatedOrder = await order.save();
-    res.status(200).json(updatedOrder);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // @desc     Update order to delivered
 // @route    PUT /api/v1/orders/:id/deliver
 // @access   Private/Admin
@@ -927,7 +882,6 @@ export {
   addOrderItems,
   getMyOrders,
   getOrderById,
-  updateOrderToPaid,
   updateOrderToDeliver,
   updateOrderStatus,
   getOrders,

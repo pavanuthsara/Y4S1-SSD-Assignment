@@ -5,7 +5,8 @@ import { protect } from '../middleware/authMiddleware.js'; // Adjust the path as
 import multer from 'multer';
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); // 2MB max per file
+
 
 router.post('/', protect, upload.fields([{ name: 'pictures', maxCount: 3 }]), createReview);
 router.get('/', protect, getBuyerReviews);
