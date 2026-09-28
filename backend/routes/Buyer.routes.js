@@ -11,9 +11,14 @@ import {
 import { protect } from '../middleware/authMiddleware.js';
 import validateRequest from '../middleware/validator.js';
 import { body, param } from 'express-validator';
+import { loginWSO2, callbackWSO2 } from '../controllers/Oauth.controller.js';
 import Order from '../models/order.model.js';
 
 const router = express.Router();
+
+// OIDC / OAuth routes for WSO2 Identity Server
+router.get('/auth/wso2', loginWSO2);
+router.get('/auth/wso2/callback', callbackWSO2);
 
 // Validation logic for buyer routes
 const validator = {

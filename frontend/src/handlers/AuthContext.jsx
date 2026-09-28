@@ -6,15 +6,17 @@ export const AuthContext = createContext();
 // Function to check if the user is authenticated
 const checkAuthentication = async () => {
   const token = localStorage.getItem('token') ||
-                localStorage.getItem('farmerToken') ||
-                document.cookie.split('; ').find(row => row.startsWith('jwt='))?.split('=')[1];
-
-  if (!token) return { isAuthenticated: false, role: null };
+                localStorage.getItem('farmerToken');
 
   try {
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch('http://localhost:5000/api/auth/verify', {
       method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers,
       credentials: 'include',
     });
     if (response.ok) {
