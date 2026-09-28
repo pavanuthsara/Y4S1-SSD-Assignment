@@ -117,7 +117,12 @@ app.use('/api/deliveryrequest', deliveryRequestRoutes);
 app.use('/api/drivers', driverRoutes);
 
 // Serve uploads - include refund evidence
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '/uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
+
 
 // Health check
 app.get('/', (req, res) => {
