@@ -23,7 +23,17 @@ const protect = async (req, res, next) => {
       throw new Error('Authentication failed: Token not provided.');
     }
     
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    // REMEDIATION: Fail fast if the secret is missing from the environment
+    if (!process.env.JWT_SECRET) {
+      console.error('FATAL: JWT_SECRET is not defined in the environment.');
+      res.statusCode = 500;
+      throw new Error('Internal server error.');
+    }
+    
+    // REMEDIATION: Pin the algorithm to HS256 to prevent algorithm confusion attacks
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256']
+    });
     
     if (!decodedToken) {
       res.statusCode = 401;
@@ -36,10 +46,25 @@ const protect = async (req, res, next) => {
       res.statusCode = 401;
       throw new Error('Authentication failed: User not found.');
     }
+
+    // Check if password was changed after the token was issued
+    if (req.user.passwordChangedAt) {
+      const changedTimestamp = parseInt(req.user.passwordChangedAt.getTime() / 1000, 10);
+      if (decodedToken.iat < changedTimestamp) {
+        res.statusCode = 401;
+        throw new Error('Authentication failed: Password recently changed. Please log in again.');
+      }
+    }
     
     next();
   } catch (error) {
-    next(error);
+    // Catch specific JWT errors (like tampered or expired tokens) and return 401
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      res.statusCode = 401;
+      next(new Error('Authentication failed: Invalid or expired token.'));
+    } else {
+      next(error);
+    }
   }
 };
 

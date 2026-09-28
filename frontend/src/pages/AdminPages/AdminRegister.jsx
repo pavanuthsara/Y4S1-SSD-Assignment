@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 
 const AdminRegister = () => {
@@ -34,19 +34,19 @@ const AdminRegister = () => {
     }
 
     try {
-      const { data } = await axios.post('/api/admin/register', {
+      // Sends the logged-in admin's Bearer token; the endpoint is admin-only
+      const { data } = await axiosInstance.post('/admin/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password
       });
-      
-      if (!data.admin || !data.token) {
+
+      if (!data.admin) {
         throw new Error('Invalid response from server');
       }
-      
-      // Show success message and redirect to login
-      alert('Admin registration successful! Please login with your credentials.');
-      navigate('/admin/login');
+
+      alert(`Admin account created for ${data.admin.email}.`);
+      navigate('/admin/dashboard');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 
                          err.message || 

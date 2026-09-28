@@ -18,13 +18,15 @@ const router = express.Router();
 
 // Public routes (no middleware)
 router.post('/login', adminLogin);
-router.post('/register', registerAdmin);
 
 // Create a new router for protected routes
 const protectedRouter = express.Router();
 protectedRouter.use(protect, admin);
 
 // Protected routes
+// REMEDIATION (A01): Only an authenticated admin may create another admin.
+// The first admin is bootstrapped via `npm run create-admin` (scripts/createAdmin.js).
+protectedRouter.post('/register', registerAdmin);
 protectedRouter.get('/dashboard/stats', getDashboardStats);
 protectedRouter.get('/users', getAllUsers);
 protectedRouter.get('/users/:id', getUserById);

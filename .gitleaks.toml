@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hardcoded-jwt-secret"
+description = "Hardcoded or default JWT secret detected"
+regex = '''(?i)(JWT_SECRET|TOKEN_SECRET)\s*=\s*['"]?[a-zA-Z0-9_\-\.]+['"]?'''
+keywords = [
+    "jwt_secret",
+    "token_secret"
+]

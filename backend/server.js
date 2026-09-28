@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import Stripe from 'stripe';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
 import buyerRoutes from './routes/Buyer.routes.js';
 
@@ -115,6 +116,19 @@ app.use('/api', complaint1Routes); // Add complaint1 routes
 
 app.use('/api/deliveryrequest', deliveryRequestRoutes);
 app.use('/api/drivers', driverRoutes);
+
+// Auth verification endpoint for frontend
+app.get('/api/auth/verify', (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] || req.cookies.jwt || req.cookies.driver_jwt;
+    if (!token) return res.status(401).json({ isAuthenticated: false, message: 'No token' });
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.status(200).json({ isAuthenticated: true, role: decoded.role || 'user' });
+  } catch (error) {
+    res.status(401).json({ isAuthenticated: false, message: 'Invalid token' });
+  }
+});
 
 // Serve uploads - include refund evidence
 app.use('/uploads', express.static(path.join(__dirname, '/uploads'), {

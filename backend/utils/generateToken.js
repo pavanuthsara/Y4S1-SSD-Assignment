@@ -1,31 +1,36 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export const generateToken = (req, res, userId) => {
+  // Fail fast if the secret is missing or too short
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined or too weak.");
+  }
+
   // Generating a JWT token for the authenticated user
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: req.body.remember ? 365 * 24 + 'h' : '24h'
+    expiresIn: req.body.remember ? 365 * 24 + "h" : "24h",
   });
 
   // Setting the JWT as an HTTP-only cookie for enhanced security
-  res.cookie('jwt', token, {
+  res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: 'strict',
-    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "strict",
+    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
   });
 };
 
 export const generateDriverToken = (req, res, driverId) => {
   // Generating a JWT token specifically for drivers
   const token = jwt.sign({ driverId }, process.env.JWT_SECRET, {
-    expiresIn: req.body.remember ? 365 * 24 + 'h' : '24h'
+    expiresIn: req.body.remember ? 365 * 24 + "h" : "24h",
   });
 
   // Setting the JWT as an HTTP-only cookie for enhanced security
-  res.cookie('driver_jwt', token, {
+  res.cookie("driver_jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: 'strict',
-    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "strict",
+    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
   });
 };
