@@ -91,7 +91,7 @@ export const callbackWSO2 = async (req, res, next) => {
 
         // Redirect back to your frontend application
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        res.redirect(`${frontendUrl}/`);
+        res.redirect(`${frontendUrl}/buyer/profile`);
         
     } catch (error) {
         console.error("WSO2 Authentication Error:", error);
