@@ -246,6 +246,19 @@ export const registerAdmin = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // REMEDIATION: Validate input types to block NoSQL operator injection and weak credentials
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+      throw new Error('Name, email and password are required');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error('Invalid email address');
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password)) {
+      throw new Error(
+        'Password must be at least 8 characters and include upper and lower case letters, a number and a symbol'
+      );
+    }
+
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -266,7 +279,9 @@ export const registerAdmin = async (req, res) => {
     });
 
     if (user) {
-      const token = generateToken(res, user._id);
+      // REMEDIATION: Do not issue a token for the new admin. The creating admin's
+      // session must not be replaced; the new admin logs in with their own credentials.
+      console.info(`Admin ${req.user.email} created new admin account ${user.email}`);
 
       res.status(201).json({
         admin: {
@@ -275,7 +290,6 @@ export const registerAdmin = async (req, res) => {
           email: user.email,
           isAdmin: user.isAdmin,
         },
-        token,
       });
     } else {
       res.status(400);

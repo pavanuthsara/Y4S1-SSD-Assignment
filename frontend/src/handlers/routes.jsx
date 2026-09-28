@@ -97,7 +97,14 @@ export const routes = (
   },
   { path: '/buyer/register', element: <BuyerRegister /> },
   { path: '/admin/login', element: <AdminLogin /> },
-  { path: '/admin/register', element: <AdminRegister /> },
+  {
+    path: '/admin/register',
+    element: isAuthenticated ? (
+      <AdminRegister />
+    ) : (
+      <Navigate to="/admin/login" />
+    ),
+  },
   {
     path: '/farmer-login',
     element: !isAuthenticated ? (
