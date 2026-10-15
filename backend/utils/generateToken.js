@@ -6,31 +6,37 @@ export const generateToken = (req, res, userId) => {
     throw new Error("FATAL ERROR: JWT_SECRET is not defined or too weak.");
   }
 
+  const remember = Boolean(req.body?.remember);
+
   // Generating a JWT token for the authenticated user
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: req.body.remember ? 365 * 24 + "h" : "24h",
+    expiresIn: remember ? 365 * 24 + "h" : "24h",
   });
 
   // Setting the JWT as an HTTP-only cookie for enhanced security
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    path: "/",
+    maxAge: remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
   });
 };
 
 export const generateDriverToken = (req, res, driverId) => {
+  const remember = Boolean(req.body?.remember);
+
   // Generating a JWT token specifically for drivers
   const token = jwt.sign({ driverId }, process.env.JWT_SECRET, {
-    expiresIn: req.body.remember ? 365 * 24 + "h" : "24h",
+    expiresIn: remember ? 365 * 24 + "h" : "24h",
   });
 
   // Setting the JWT as an HTTP-only cookie for enhanced security
   res.cookie("driver_jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: req.body.remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    path: "/",
+    maxAge: remember ? 365 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
   });
 };

@@ -25,6 +25,7 @@ function App() {
             farmerData,
             handleLoginSuccess,
             handleLogout,
+            handleBuyerLogout,
             handleRegistrationSuccess,
             loading,
           }) => (
@@ -43,7 +44,12 @@ function App() {
 
                 return (
                   <Router>
-                    <LayoutWrapper user={user} setUser={setUser} cartItems={cartItems}>
+                    <LayoutWrapper
+                      user={user}
+                      isAuthenticated={isAuthenticated}
+                      onBuyerLogout={handleBuyerLogout}
+                      cartItems={cartItems}
+                    >
                       <Routes>
                         {routes(
                           isAuthenticated,
@@ -59,6 +65,7 @@ function App() {
                           farmerData,
                           handleLoginSuccess,
                           handleLogout,
+                          handleBuyerLogout,
                           handleRegistrationSuccess
                         ).map((route, index) => (
                           <Route

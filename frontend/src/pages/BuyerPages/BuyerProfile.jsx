@@ -449,7 +449,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
   );
 };
  
-const BuyerProfile = () => { 
+const BuyerProfile = ({ onLogout }) => {
   const [user, setUser] = useState(null); 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -471,11 +471,14 @@ const BuyerProfile = () => {
         setUser(res.data);
       } catch (error) { 
         console.error('Failed to load profile', error);
+        if (error.response?.status === 401) {
+          onLogout();
+        }
       }
     }; 
  
     fetchProfile(); 
-  }, []); 
+  }, [onLogout]);
  
   // Check for payment success parameters
   useEffect(() => {
@@ -602,11 +605,7 @@ const BuyerProfile = () => {
           {/* Logout Button */}
           <div className="p-4 border-t border-emerald-800">
             <button
-              onClick={() => {
-                // Handle logout
-                localStorage.removeItem('user');
-                window.location.href = '/buyer/login';
-              }}
+              onClick={onLogout}
               className="flex items-center w-full px-4 py-3 text-emerald-200 hover:bg-emerald-800 rounded-lg transition-colors"
             >
               <LogOut className="h-5 w-5" />

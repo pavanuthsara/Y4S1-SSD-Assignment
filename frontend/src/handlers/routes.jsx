@@ -15,6 +15,8 @@ import DriverNotifications from '../pages/DeliveryPages/DriverNotifications.jsx'
 // Buyer Pages
 import BuyerLogin from '../pages/BuyerPages/BuyerLogin';
 import BuyerRegister from '../pages/BuyerPages/BuyerRegister';
+import BuyerForgotPassword from '../pages/BuyerPages/BuyerForgotPassword';
+import BuyerResetPassword from '../pages/BuyerPages/BuyerResetPassword';
 import BuyerProfile from '../pages/BuyerPages/BuyerProfile';
 import BuyerDashboard from '../pages/BuyerPages/BuyerDashboard';
 import ProductListPage from '../pages/BuyerPages/ProductListPage';
@@ -74,6 +76,7 @@ export const routes = (
   farmerData,
   handleLoginSuccess,
   handleLogout,
+  handleBuyerLogout,
   handleRegistrationSuccess
 ) => [
   // Public Routes
@@ -96,6 +99,22 @@ export const routes = (
     ),
   },
   { path: '/buyer/register', element: <BuyerRegister /> },
+  {
+    path: '/buyer/forgot-password',
+    element: isAuthenticated ? (
+      <Navigate to="/buyer/dashboard" />
+    ) : (
+      <BuyerForgotPassword />
+    ),
+  },
+  {
+    path: '/reset-password/:id/:token',
+    element: isAuthenticated ? (
+      <Navigate to="/buyer/dashboard" />
+    ) : (
+      <BuyerResetPassword />
+    ),
+  },
   { path: '/admin/login', element: <AdminLogin /> },
   {
     path: '/admin/register',
@@ -192,7 +211,7 @@ export const routes = (
   {
     path: '/buyer/dashboard',
     element: isAuthenticated ? (
-      <BuyerDashboard setUser={setUser} />
+      <BuyerDashboard onLogout={handleBuyerLogout} />
     ) : (
       <Navigate to="/buyer/login" />
     ),
@@ -200,7 +219,7 @@ export const routes = (
   {
     path: '/buyer/profile',
     element: isAuthenticated ? (
-      <BuyerProfile />
+      <BuyerProfile onLogout={handleBuyerLogout} />
     ) : (
       <Navigate to="/buyer/login" />
     ),

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ShoppingCart, 
@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import ComplaintForm from '../../components/ComplaintForm';
 
-const BuyerDashboard = ({ setUser }) => {
+const BuyerDashboard = ({ onLogout }) => {
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
@@ -37,8 +37,6 @@ const BuyerDashboard = ({ setUser }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const navigate = useNavigate();
-
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -65,10 +63,7 @@ const BuyerDashboard = ({ setUser }) => {
         console.error('Error response:', error.response);
         if (error.response?.status === 401) {
           setError('Your session has expired. Please log in again.');
-          setTimeout(() => {
-            setUser(null);
-            navigate('/buyer/login');
-          }, 2000);
+          setTimeout(onLogout, 2000);
         } else {
           setError('Failed to load dashboard data. Please try again later.');
         }
@@ -78,12 +73,7 @@ const BuyerDashboard = ({ setUser }) => {
     };
 
     fetchDashboardData();
-  }, [navigate, setUser]);
-
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/buyer/login');
-  };
+  }, [onLogout]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -264,7 +254,7 @@ const BuyerDashboard = ({ setUser }) => {
           {/* Logout Button */}
           <div className="p-4 border-t border-emerald-800">
             <button
-              onClick={handleLogout}
+              onClick={onLogout}
               className="flex items-center w-full px-4 py-3 rounded-lg text-emerald-200 hover:bg-emerald-800 transition-colors"
             >
               <LogOut className="h-5 w-5" />
@@ -432,4 +422,4 @@ const BuyerDashboard = ({ setUser }) => {
   );
 };
 
-export default BuyerDashboard; 
+export default BuyerDashboard;

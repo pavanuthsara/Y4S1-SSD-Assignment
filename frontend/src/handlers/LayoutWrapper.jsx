@@ -5,13 +5,14 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from 'react-hot-toast';
 
-const LayoutWrapper = ({ children, user, setUser, cartItems }) => {
+const LayoutWrapper = ({ children, user, isAuthenticated, onBuyerLogout, cartItems }) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
   const isDeliveryRoute = (path) => path.startsWith('/drivers');
   const isBuyerRoute = (path) =>
     path.startsWith('/buyer') ||
+    path.startsWith('/reset-password') ||
     path === '/products' ||
     path === '/cart' ||
     path === '/' ||
@@ -20,7 +21,12 @@ const LayoutWrapper = ({ children, user, setUser, cartItems }) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {isBuyerRoute(currentPath) && !isDeliveryRoute(currentPath) && (
-        <Header user={user} setUser={setUser} cartItems={cartItems} />
+        <Header
+          user={user}
+          isAuthenticated={isAuthenticated}
+          onLogout={onBuyerLogout}
+          cartItems={cartItems}
+        />
       )}
       <main className={`flex-grow ${isBuyerRoute(currentPath) && !isDeliveryRoute(currentPath) ? 'pt-16' : ''}`}>
         <ToastContainer position="top-right" autoClose={3000} />

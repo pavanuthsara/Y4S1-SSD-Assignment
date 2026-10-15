@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 
 // Create AuthContext
 export const AuthContext = createContext();
@@ -34,7 +34,7 @@ const checkAuthentication = async () => {
 const clearStaleTokens = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('farmerToken');
-  document.cookie = 'jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; sameSite=strict';
+  localStorage.removeItem('user');
 };
 
 export const AuthProvider = ({ children }) => {
@@ -80,6 +80,27 @@ export const AuthProvider = ({ children }) => {
     setFarmerData(null);
   };
 
+  const handleBuyerLogout = useCallback(async () => {
+    try {
+      const response = await fetch('/api/buyers/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('The server could not complete logout.');
+      }
+    } catch (error) {
+      console.error('Buyer logout request failed:', error);
+    } finally {
+      clearStaleTokens();
+      setIsAuthenticated(false);
+      setUser({ name: 'Guest', role: null });
+      setFarmerData(null);
+      window.location.replace('/buyer/login');
+    }
+  }, []);
+
   const handleRegistrationSuccess = (data) => {
     console.log('AuthContext: handleRegistrationSuccess called with data:', data);
     handleLoginSuccess(data, 'farmerToken');
@@ -95,6 +116,7 @@ export const AuthProvider = ({ children }) => {
         farmerData,
         handleLoginSuccess,
         handleLogout,
+        handleBuyerLogout,
         handleRegistrationSuccess,
         loading,
       }}

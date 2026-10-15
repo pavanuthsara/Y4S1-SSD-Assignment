@@ -31,7 +31,6 @@ const validator = {
       .isEmail()
       .withMessage('Please enter a valid email address'),
     body('password')
-      .trim()
       .isString()
       .notEmpty()
       .withMessage('Password is Empty')
@@ -45,7 +44,6 @@ const validator = {
       .isEmail()
       .withMessage('Please enter a valid email address'),
     body('password')
-      .trim()
       .isString()
       .notEmpty()
       .withMessage('Password is Empty')
@@ -69,10 +67,8 @@ const validator = {
   ],
   resetPassword: [
     body('password')
-      .trim()
       .notEmpty()
       .withMessage('Password is Required')
-      .escape()
       .bail()
       .isLength({ min: 6 })
       .withMessage('Password must be at least 6 characters'),
@@ -91,11 +87,12 @@ const validator = {
 // Route to register a new buyer
 router.post('/', validator.checkNewUser, validateRequest, registerUser);
 
-// Route for buyer login
+// Route for buyer email/password login. WSO2 is also available above.
 router.post('/login', validator.checkLogin, validateRequest, loginUser);
 
-// Route for buyer logout
-router.post('/logout', protect, logoutUser);
+// Logout must remain available even when the JWT is expired or invalid so the
+// browser can always clear its authentication cookie.
+router.post('/logout', logoutUser);
 
 // Routes for password reset
 router.post('/reset-password/request', validator.resetPasswordRequest, validateRequest, resetPasswordRequest);

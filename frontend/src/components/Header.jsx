@@ -1,15 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ShoppingCart, User, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 
-const Header = ({ user, setUser, cartItems }) => {
-  const navigate = useNavigate();
+const Header = ({ user, isAuthenticated, onLogout, cartItems }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/buyer/login');
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md">
@@ -51,7 +45,7 @@ const Header = ({ user, setUser, cartItems }) => {
             </Link>
 
             {/* User Menu */}
-            {user ? (
+            {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -68,19 +62,19 @@ const Header = ({ user, setUser, cartItems }) => {
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                     <Link
-                      to="/profile"
+                      to="/buyer/profile"
                       className="block px-4 py-2 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
                     >
                       Profile
                     </Link>
                     <Link
-                      to="/orders"
+                      to="/buyer/orders"
                       className="block px-4 py-2 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
                     >
                       Orders
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={onLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
                       Logout

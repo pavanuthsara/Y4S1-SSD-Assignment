@@ -74,7 +74,18 @@ const registerUser = async (req, res, next) => {
 
 // LOGOUT
 const logoutUser = (req, res) => {
-  res.clearCookie('jwt', { httpOnly: true });
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  });
+  res.clearCookie('code_verifier', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
   res.status(200).json({ message: 'Logout successful' });
 };
 
@@ -211,7 +222,12 @@ const resetPassword = async (req, res, next) => {
     user.passwordChangedAt = Date.now() - 1000;
     await user.save();
 
-    res.clearCookie('jwt', { httpOnly: true });
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
     res.status(200).json({ message: 'Password successfully reset. Please log in with your new password.' });
   } catch (error) {
     next(error);
